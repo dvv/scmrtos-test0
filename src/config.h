@@ -1,0 +1,1 @@
+#define scmRTOS_PROCESS_COUNT 1
