@@ -1,0 +1,49 @@
+{
+  "build": {
+    "core": "stm32",
+    "cpu": "cortex-m3",
+    "extra_flags": "-DSTM32F103x8",
+    "f_cpu": "72000000L",
+    "hwids": [
+      [
+        "0x1EAF",
+        "0x0003"
+      ],
+      [
+        "0x1EAF",
+        "0x0004"
+      ]
+    ],
+    "ldscript": "stm32f103x8.ld",
+    "mcu": "stm32f103c8t6",
+    "//variant": "BLUEPILL_F103C8",
+    "variant": "stm32f1"
+  },
+  "debug": {
+    "jlink_device": "STM32F103C8",
+    "openocd_target": "stm32f1x",
+    "svd_path": "STM32F103xx.svd"
+  },
+  "frameworks": [
+    "arduino",
+    "libopencm3",
+    "stm32cube",
+    "chibios"
+  ],
+  "name": "BluePill F103C8",
+  "upload": {
+    "boot_version": 1,
+    "maximum_ram_size": 20480,
+    "maximum_size": 65536,
+    "protocol": "dfu",
+    "protocols": [
+      "jlink",
+      "stlink",
+      "blackmagic",
+      "dfu"
+    ],
+    "require_upload_port": true
+  },
+  "url": "http://www.leaflabs.com/maple/",
+  "vendor": "LeafLabs"
+}
