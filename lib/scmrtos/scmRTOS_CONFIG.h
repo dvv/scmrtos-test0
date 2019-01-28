@@ -4,11 +4,11 @@
 //*
 //*     NICKNAME:  scmRTOS
 //*
-//*     PROCESSOR: AVR (Atmel)
+//*     PROCESSOR: ARM Cortex-M3
 //*
-//*     TOOLKIT:  avr-gcc (GNU)
+//*     TOOLKIT:   ARM GCC
 //*
-//*     PURPOSE:   Project Level Configuration
+//*     PURPOSE:   Project-level OS configuration
 //*
 //*     Version: v5.1.0
 //*
@@ -42,68 +42,43 @@
 //*     =================================================================
 //*
 //******************************************************************************
-//*     avr-gcc port by Oleksandr O. Redchuk, Copyright (c) 2007-2016
+//*     GCC STM32F1xx samples by Anton B. Gusev aka AHTOXA, Copyright (c) 2009-2016
 
 #ifndef  scmRTOS_CONFIG_H
 #define  scmRTOS_CONFIG_H
 
 #ifndef __ASSEMBLER__
-typedef uint16_t timeout_t;
+
+#include <stdint.h>
+typedef uint16_t      timeout_t;
 typedef uint_fast32_t tick_count_t;
+
 #endif // __ASSEMBLER__
 
 //------------------------------------------------------------------------------
 //
-//    Specify scmRTOS Process Count. Must be less then 31
+//    Specify scmRTOS Process Count. Must be less than 31
 //
 //
 #include "../src/config.h"
-// #define  scmRTOS_PROCESS_COUNT              1
-
-//------------------------------------------------------------------------------
-//
-//    Specify scmRTOS Process Restart capability
-//
-//
-#define scmRTOS_PROCESS_RESTART_ENABLE  0
-
-//-----------------------------------------------------------------------------
-//
-//    User-defined TCritSect class implementation enable
-//        TCritSect class must be defined in scmRTOS_TARGET_CFG.h
-//        if this feature enabled.
-//
-#define scmRTOS_USER_DEFINED_CRITSECT_ENABLE  0
+//#define  scmRTOS_PROCESS_COUNT                  2
 
 //-----------------------------------------------------------------------------
 //
 //    scmRTOS System Timer
 //
-//    Nested Interrupts Enable macro. Value 1 means that interrupts are
-//    globally enabled within System Timer ISR.
+//    Nested Interrupts enable macro. Value 1 means that interrupts are
+//    globally enabled within System Timer ISR (this is default for Cortex-M3).
 //
 //
-#define  scmRTOS_SYSTIMER_NEST_INTS_ENABLE  1
-
-//-----------------------------------------------------------------------------
-//
-//    ISR Wrapper type used in System Timer ISR
-//    There are two types: TISRW and TISRW_SS.
-//
-//    TISRW : Plain ISR Wrapper, does not switch SP to separate ISR stack.
-//            Suitable for processors that have hardware-switched ISR stack,
-//            or in such ISRs where stack consumption is acceptable
-//
-//    TISRW_SS : ISR Wrapper with separate ISR stack software switching
-//
-#define scmRTOS_ISRW_TYPE   TISRW //_SS
+#define scmRTOS_SYSTIMER_NEST_INTS_ENABLE 1
 
 //-----------------------------------------------------------------------------
 //
 //    scmRTOS System Timer Tick Counter Enable
 //
 //
-#define  scmRTOS_SYSTEM_TICKS_ENABLE    0 // 1
+#define  scmRTOS_SYSTEM_TICKS_ENABLE        1
 
 
 //-----------------------------------------------------------------------------
@@ -111,34 +86,21 @@ typedef uint_fast32_t tick_count_t;
 //    scmRTOS System Timer Hook
 //
 //
-#define  scmRTOS_SYSTIMER_HOOK_ENABLE       0 // 1
+#define  scmRTOS_SYSTIMER_HOOK_ENABLE       0
 
 //-----------------------------------------------------------------------------
 //
 //    scmRTOS Idle Process Hook
 //
 //
-#define  scmRTOS_IDLE_HOOK_ENABLE           1
-
-
-//-----------------------------------------------------------------------------
-//
-//    scmRTOS Idle Process Stacks size (in bytes)
-//
-//
-#define scmRTOS_IDLE_PROCESS_STACK_SIZE       90
+#define  scmRTOS_IDLE_HOOK_ENABLE           0
 
 //-----------------------------------------------------------------------------
 //
-//    scmRTOS Context Switch Scheme
+//    scmRTOS Idle Process Stack size (in bytes)
+//    (20 * sizeof(stack_item_t)) - it's a minimum allowed value.
 //
-//    The macro defines a context switch manner. Value 0 sets direct context
-//    switch in the scheduler and in the OS ISRs. This is the primary method.
-//    Value 1 sets the second way to switch context - by using of software
-//    interrupt. See documentation fo details.
-//
-//
-#define  scmRTOS_CONTEXT_SWITCH_SCHEME      1
+#define scmRTOS_IDLE_PROCESS_STACK_SIZE       (100 * sizeof(stack_item_t))
 
 //-----------------------------------------------------------------------------
 //
@@ -148,34 +110,42 @@ typedef uint_fast32_t tick_count_t;
 //    Context Switch Hook function.
 //
 //
-#define  scmRTOS_CONTEXT_SWITCH_USER_HOOK_ENABLE  1
+#define  scmRTOS_CONTEXT_SWITCH_USER_HOOK_ENABLE  0
 
 //-----------------------------------------------------------------------------
 //
-//    scmRTOS Priority Order
+//    scmRTOS Debug enable
 //
-//    This macro defines the order of the process's priorities. Default,
-//    the ascending order is used. Alternatively, the descending priority
-//    order can be used. On some platforms the descending order is preferred
-//    because of performance.
-//
-//    Default (corresponding to ascending order) value of macro is 0.
-//    Alternative (corresponding to descending order) value of macro is 1.
-//
-//
-#define  scmRTOS_PRIORITY_ORDER             0
-
-//-----------------------------------------------------------------------------
-//
-//    scmRTOS debug enable
-//
-//    The macro enables debug mode which allows debug functionality
-//    such as finding process's stack slack and some other.
+//    The macro enables/disables acquisition of some debug info:
+//    stack usage information and information about the object that process is waiting for.
 //
 //
 #define scmRTOS_DEBUG_ENABLE  0
 
 //-----------------------------------------------------------------------------
+//
+//    scmRTOS Process Restart enable
+//
+//    The macro enables/disables process restarting facility.
+//
+//
+#define scmRTOS_PROCESS_RESTART_ENABLE 0
+
+//-----------------------------------------------------------------------------
+//
+//     PendSVC_ISR optimization:
+//    0 - use near (+- 1Mb) call for os_context_switch_hook
+//    1 - use far call
+//
+#define scmRTOS_CONTEXT_SWITCH_HOOK_IS_FAR     0
+
+//-----------------------------------------------------------------------------
+//
+//    scmRTOS process with initial suspended state enable
+//
+//
+#define scmRTOS_SUSPENDED_PROCESS_ENABLE  0
 
 #endif // scmRTOS_CONFIG_H
 //-----------------------------------------------------------------------------
+

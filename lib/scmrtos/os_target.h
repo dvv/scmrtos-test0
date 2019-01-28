@@ -57,9 +57,9 @@
 #error "This file should only be compiled with GNU C++ Compiler"
 #endif // __GNUC__
 
-// #if (!defined __ARM_ARCH_7M__) && (!defined __ARM_ARCH_7EM__) && (!defined __ARM_ARCH_6M__) && (!defined ARDUINO_ARCH_STM32F1)
-// #error "This file must be compiled for ARMv6-M (Cortex-M0(+)), ARMv7-M (Cortex-M3) and ARMv7E-M (Cortex-M4(F)) processors only."
-// #endif
+#if (!defined __ARM_ARCH_7M__) && (!defined __ARM_ARCH_7EM__) && (!defined __ARM_ARCH_6M__)
+#error "This file must be compiled for ARMv6-M (Cortex-M0(+)), ARMv7-M (Cortex-M3) and ARMv7E-M (Cortex-M4(F)) processors only."
+#endif
 
 #if (__GNUC__ < 3)
 #error "This file must be compiled by GCC C/C++ Compiler v3.0 or higher."
@@ -140,8 +140,9 @@ typedef uint32_t status_reg_t;
 //    Cortex-M0 lacks CLZ instruction, so only ascending order is implemented for it.
 //
 #if (defined __ARM_ARCH_6M__)
-#undef   scmRTOS_PRIORITY_ORDER
 #define  scmRTOS_PRIORITY_ORDER             0
+#else
+#define  scmRTOS_PRIORITY_ORDER             1
 #endif
 
 //-----------------------------------------------------------------------------
@@ -196,8 +197,8 @@ INLINE status_reg_t get_interrupt_state()
 class TCritSect
 {
 public:
-    INLINE TCritSect () : StatusReg(get_interrupt_state()) { disable_interrupts(); }
-    INLINE ~TCritSect() { set_interrupt_state(StatusReg); }
+    TCritSect () : StatusReg(get_interrupt_state()) { disable_interrupts(); }
+    ~TCritSect() { set_interrupt_state(StatusReg); }
 
 private:
     status_reg_t StatusReg;
@@ -280,8 +281,7 @@ namespace OS
 #if scmRTOS_CONTEXT_SWITCH_SCHEME == 1
 
 // 0xE000ED04 - Interrupt Control State Register
-// set PENDSVSET bit
-INLINE void raise_context_switch() { *((volatile uint32_t*)0xE000ED04) = 0x10000000; }
+INLINE void raise_context_switch() { *((volatile uint32_t*)0xE000ED04) |= 0x10000000; }
 
 #define ENABLE_NESTED_INTERRUPTS()
 

@@ -1,1 +1,1 @@
-#define scmRTOS_PROCESS_COUNT 1
+#define scmRTOS_PROCESS_COUNT 2

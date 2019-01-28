@@ -316,7 +316,6 @@ namespace OS
         S    read_isr  (T* const data, const S max_size);
 
         void push      (const T& item);
-        void push_isr  (const T& item);
         void push_front(const T& item);
 
         bool pop     (T& item, timeout_t timeout = 0);
@@ -417,18 +416,6 @@ void OS::channel<T, Size, S>::push(const T& item)
 
     pool.push_back(item);
     resume_all(ConsumersProcessMap);
-}
-//------------------------------------------------------------------------------
-template<typename T, uint16_t Size, typename S>
-void OS::channel<T, Size, S>::push_isr(const T& item)
-{
-    TCritSect cs;
-
-    if(pool.get_free_size())
-    {
-        pool.push_back(item);
-    }
-    resume_all_isr(ConsumersProcessMap);
 }
 //------------------------------------------------------------------------------
 template<typename T, uint16_t Size, typename S>

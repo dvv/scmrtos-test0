@@ -168,7 +168,7 @@
 #if (scmRTOS_SUSPENDED_PROCESS_ENABLE < 0) || (scmRTOS_SUSPENDED_PROCESS_ENABLE > 1)
 #error "Error: scmRTOS_SUSPENDED_PROCESS_ENABLE must have values 0 or 1 only!"
 #endif
-     
+
 //----------------- User Hooks inlining ----------------------------------------
 #ifndef INLINE_SYS_TIMER_HOOK
 #define INLINE_SYS_TIMER_HOOK

@@ -1,92 +1,75 @@
-//------------------------------------------------------------------------------
-
 #include <Arduino.h>
-
-//------------------------------------------------------------------------------
-
 #include <scmRTOS.h>
 
-#if scmRTOS_IDLE_HOOK_ENABLE
-void OS::idle_process_user_hook() { loop(); }
-#endif
+#define LED_PIN PB1
 
-#if SCMRTOS_USE_CUSTOM_TIMER
-
-/**
- * Custom system timer configuration.
- */
-extern "C" void __init_system_timer()
-{
-	RCC_BASE->APB1ENR  |= RCC_APB1ENR_TIM4EN;
-  nvic_irq_set_priority(NVIC_TIMER4, 0xFF);
-  NVIC_BASE->ISER[(((uint32_t)30) >> 5UL)] = (uint32_t)(1UL << (((uint32_t)30) & 0x1FUL));
-	TIMER4->regs.gen->PSC = 1;
-	TIMER4->regs.gen->ARR = 36000;          // 1KHz
-	TIMER4->regs.gen->EGR = TIMER_EGR_UG;     // generate an update event to reload the prescaler value immediately
-	TIMER4->regs.gen->DIER = TIMER_DIER_UIE;  // enable update interrupt
-	TIMER4->regs.gen->CR1 = TIMER_CR1_CEN;    // run timer
+void ticker() {
+  OS::system_timer_isr();
 }
 
-void LOCK_SYSTEM_TIMER()
-{
-	TIMER4->regs.gen->CR1 &= ~TIMER_CR1_CEN;
+extern "C" void __init_system_timer() {
+  systick_attach_callback(ticker);
 }
 
-void UNLOCK_SYSTEM_TIMER()
-{
-	TIMER4->regs.gen->CR1 |= TIMER_CR1_CEN;
+void LOCK_SYSTEM_TIMER() {
+  systick_disable();
 }
 
-/**
- * Interrupt handler.
- * Clears interrupt flags and calls the OS::system_timer_isr();
- */
-OS_INTERRUPT void TIM4_IRQHandler()
-{
-	if (TIMER4->regs.gen->SR & TIMER_SR_UIF)
-	{
-		TIMER4->regs.gen->SR = ~TIMER_SR_UIF;
-OS::TISRW ISR; // DVV: need ???
-		OS::system_timer_isr();
-	}
+void UNLOCK_SYSTEM_TIMER() {
+  systick_enable();
 }
 
-#endif
-
-//------------------------------------------------------------------------------
-
-void setup() {
+void setup()
+{
+  pinMode(LED_PIN, OUTPUT);
 
   Serial.begin(115200);
-
-  // check USBSerial works
-  delay(2000);
-  Serial.println("INIT");
+  Serial.print("Starting os...\r\n");
 
   // start OS
   UNLOCK_SYSTEM_TIMER();
   OS::run();
-
 }
 
-//------------------------------------------------------------------------------
-
-void loop() {
+void loop()
+{
 }
 
-//------------------------------------------------------------------------------
+typedef OS::process<OS::pr0, 600> TProc0;
+typedef OS::process<OS::pr1, 600> TProc1;
 
-typedef OS::process<OS::pr0, 256> TProc0;
-static TProc0 Proc0;
+TProc0 proc0;
+TProc1 proc1;
+
+OS::TMutex serialMutex;
+
+void serialBlink(char const* message)
+{
+  OS::TMutexLocker lock(serialMutex);
+  Serial.print(message);
+}
+
+OS::TEventFlag eventFlag;
 
 namespace OS
 {
-  template<> OS_PROCESS void TProc0::exec() {
+  template<> OS_PROCESS void TProc0::exec()
+  {
+    for (;;)
+    {
+      serialBlink("0");
+      digitalWrite(LED_PIN, 0);
+      OS::sleep(50);
+      eventFlag.signal();
+      OS::sleep(950);
+    }
+  }
+
+  template<> OS_PROCESS void TProc1::exec() {
     for (;;) {
-      OS::sleep(1000);
-      Serial.print("~");
+      eventFlag.wait();
+      digitalWrite(LED_PIN, 1);
+      serialBlink("1");
     }
   }
 }
-
-//------------------------------------------------------------------------------
